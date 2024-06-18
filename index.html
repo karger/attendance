@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head mv-app="head" mv-bar="none" mv-expressions="none">
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width">
+		<title mv-value="if(event.title,event.title,'Event Signup')">Event Signup</title>
+		<link rel="stylesheet" href="https://get.mavo.io/mavo.css">
+		<script src="https://get.mavo.io/mavo.js"></script>
+		<meta property="debug" mv-value="url('debug')=''">
+		<style mv-if="!debug">
+			.debug {
+					display: none
+		</style>
+		<style>
+			.classList {
+					display: grid;
+					column-gap: 10px;
+					grid-template-columns: 5ex max-content 200px;
+					justify-content: space-between;
+					align-items: center;
+					max-width: 80ex;
+			}
+			#lookback {
+					width: 5ex;
+			}
+			button:has(img) {
+					border: none;
+					appearance: none;
+					background-color: inherit;
+			}
+			.classList > div, .classList > div > div, .classList > div > div > ul, .classList > div > div > ul > li {
+					display: contents;
+			}
+			.classList h3 {
+					grid-column: 1 / -1
+			}
+			img[src="bank-check.png"] {
+					transform: translate(0, -5px);
+			}
+			.radio-icon {
+					width: 32px;
+					opacity: 33%;
+			}
+			.radio-icon:hover {
+					cursor: pointer;
+					opacity: 100%;
+			}
+			.radio-icon.selected-true {
+					opacity: 100%;
+			}
+		</style>
+	</head>
+	<body>
+
+		<main mv-app="attendance" mv-storage="local">
+			<h2 property="title" mv-default="Attendance"></h2>
+			<div>Class date: <input type="date" property="dateChoice" mv-default="[date($startup)]" mv-storage="none"></div>
+
+			<div class="debug">
+				<h3>Recent</h3>
+				<div mv-list="recent" mv-value="filter(db, db.recent)"></div>
+				<h3>Recent Grouped</h3>
+				<div mv-list="recentg" mv-value="recent by recent.name"></div>
+			</div>
+
+			<section class="classList">
+				<div>
+					<div>
+						<h3>New</h3>
+						<datalist id="names" mv-list mv-value="sort(unique(db.name))">
+							<option mv-list-item></option>
+						</datalist>
+						<div property="newItem" style="display:none" mv-storage="none"><!--to store in db-->
+							<meta property="name" mv-value="newName">
+							<meta property="classDate" mv-value="dateChoice">
+							<meta property="payment">
+						</div>
+						<div><!--absorb grid cell--> </div>
+						<input property="newName" list="names" mv-storage="none">
+						<span mv-if="newName">
+							<img class="radio-icon selected-true" src="dollar.png" mv-action="set(newItem.payment,'cash'), add(newItem,db), set(newName,'')">
+							<img class="radio-icon selected-true" src="bank-check.png" mv-action="set(newItem.payment,'check'), add(newItem,db), set(newName,'')">
+							<img class="radio-icon selected-true" src="venmo.png" mv-action="set(newItem.payment,'venmo'), add(newItem,db), set(newName,'')">
+							<img class="radio-icon selected-true" src="circle.png" mv-action="set(newItem.payment,'none'), add(newItem,db), set(newName,'')">
+						</span>
+					</div>
+				</div>
+				<div>
+					<div>
+						<h3>Recent</h3>
+						<div style="grid-column: 1 / -1">Most recent <input id="lookback" type="number" property="lookback" mv-default="7"> days&apos; attendees</div>
+
+						<ul mv-list mv-value="sort(recentg.$items, recentg.$items.name)">
+							<li mv-list-item>
+								<div><!--absorb grid cell--> </div>
+								<span property="name"></span>
+								<span>
+									<img class="radio-icon" src="dollar.png" mv-action="set(newItem.payment,'cash'), add(newItem,db)">
+									<img class="radio-icon" src="bank-check.png" mv-action="set(new.payment,'check'), add(new,db)">
+									<img class="radio-icon" src="venmo.png" mv-action="set(new.payment,'venmo'), add(new,db)">
+									<img class="radio-icon" src="circle.png" mv-action="set(new.payment,'none'), add(new,db)">
+								</span>
+						</ul>
+					</div>
+				</div>
+				<meta property="dateGroups" mv-value="db by db.classDate">
+				<div mv-list="byDate" mv-value="sort(dateGroups,'$value',order: 'desc')">
+					<div mv-list-item>
+						<h3>[classDate]</h3>
+						<ul mv-list="$items">
+							<li mv-list-item>
+								<button mv-action="delete(db where db.name=name and db.classDate=classDate)">X</button>
+								<span property="name"></span> 					
+								<span>
+									<meta property="payment">
+									<meta style="display:none" property="payment">
+									<img class="radio-icon selected-[payment=='cash']" src="dollar.png" mv-action="set(db.payment where db.key=key,'cash')">
+									<img class="radio-icon selected-[payment=='check']" src="bank-check.png" mv-action="set(db.payment where db.key=key,'check')">
+									<img class="radio-icon selected-[payment=='venmo']" src="venmo.png" mv-action="set(db.payment where db.key=key,'venmo')">
+									<img class="radio-icon selected-[payment=='none']" src="circle.png" mv-action="set(db.payment where db.key=key,'none')">
+								</span>
+								<meta property="key">
+							</li>
+						</ul>
+					</div>
+				</div>
+			</section>
+
+				
+			
+			<div class="debug">
+				<h2>Database</h2>
+				<ul mv-list="db" mv-initial-items="0">
+					<li mv-list-item>
+						<span property="name"></span>, <span property="classDate"></span>, <span property="payment"></span>
+						<span property="recent" mv-value="$startup - classDate < (1+lookback)*24*60*60*1000"></span>
+						<meta property="key" mv-value="name & classDate">
+					</li>
+				</ul>
+			</div>
+		</main>
+	</body>
+</html>
