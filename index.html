@@ -3,7 +3,7 @@
 	<head mv-app="head" mv-bar="none" mv-expressions="none">
 		<meta charset="UTF-8">
 		<meta name="viewport" content="width=device-width">
-		<title mv-value="if(event.title,event.title,'Event Signup')">Event Signup</title>
+		<title mv-value="if(signup.title,signup.title,'Sign up')">Sign up</title>
 		<link rel="stylesheet" href="https://get.mavo.io/mavo.css">
 		<script src="https://get.mavo.io/mavo.js"></script>
 		<meta property="debug" mv-value="url('debug')=''">
@@ -12,45 +12,55 @@
 					display: none
 		</style>
 		<style>
-			.debug {
-					float: right;
+			[property="price"][property="price"] input {
+					min-width: 8ch;
 			}
-			.classList {
+			[mv-editor-type="number"] {
+					text-align: right;
+			}
+			[mv-list="session"] {
+					margin-left: 2ex;
 					display: grid;
-					column-gap: 10px;
-					grid-template-columns: 5ex max-content 200px;
+					column-gap: 0px;
+					grid-template-columns: 3ch max-content 8ch 8ch max-content 30ch;
 					justify-content: space-between;
+					justify-items: start;
 					align-items: center;
-					max-width: 80ex;
+					max-width: 150ex;
 			}
-			.delete {
-					grid-column: 1;
+			[property="newItem"] {
+					padding-left: 2ex;
 			}
-			.name {
-					grid-column: 2;
+			[mv-list="session"] > [mv-list-item] , [property="newItem"] {
+					display: grid;
+					grid-template-columns: subgrid;
+					align-items: center;
+					justify-items: start;
+					grid-column: 1 / -1;
 			}
-			.payment {
-					grid-column: 3;
+			.edit-number, .edit-number input {
+					min-width: 6ch;
+					text-align: right;
+					text-align: end;
 			}
-			#lookback {
-					width: 5ex;
+			[mv-list="session"] > [mv-list-item] > h3 {
+					grid-column: 1 / -1;
 			}
-			button:has(img) {
-					border: none;
-					appearance: none;
-					background-color: inherit;
-			}
-			.classList > div, .classList > div > div, .classList > div > div > ul, .classList > div > div > ul > li {
+			[mv-list="student"] {
 					display: contents;
 			}
-			.classList h3 {
-					grid-column: 1 / -1
+			[mv-list="student"] >  [mv-list-item] {
+					padding-left: 2ex;
+					display: grid;
+					grid-column: 1 / -1;
+					grid-template-columns: subgrid;
+					align-items: center;
+					justify-items: start;
 			}
-			img[src="bank-check.png"] {
-					transform: translate(0, -5px);
+			input[type='number'] {
+					max-width: 5ch;
 			}
 			.radio-icon {
-					width: 32px;
 					opacity: 33%;
 			}
 			.radio-icon:hover {
@@ -60,115 +70,186 @@
 			.radio-icon.selected-true {
 					opacity: 100%;
 			}
+			.hidden-if-true {
+					visibility: hidden;
+			}
+			.hide-if-true.hide-if-true.hide-if-true {
+					display:none;
+			}
+			[mv-app]:not([mv-mode=edit]) .hide-onread-true {
+					display: none;
+			}
+			.debug {
+					min-width: 40ex;
+					float: right;
+			}
+			[mv-app] button.mv-add {
+					display: none; /*hide default add buttons*/
+			}
+			#lookback {
+					width: 5ex;
+			}
+			button:has(img) {
+					border: none;
+					appearance: none;
+					background-color: inherit;
+			}
+			img[src="bank-check.png"] {
+					transform: translate(0, -5px);
+			}
 		</style>
 	</head>
 	<body>
-		<pre style="display:none" id="payments">
+		<pre style="display:none" id="payTypes">
 			[
+			{"type": "none",
+			"icon": "circle.png"},
 			{"type": "cash",
 			"icon": "dollar.png"},
 			{"type": "check",
 			"icon": "bank-check.png"},
 			{"type": "venmo",
 			"icon": "venmo.png"},
-			{"type": "none",
-			"icon": "circle.png"}
+			{"type": "card",
+			"icon": "membership.png"}
 			]
 		</pre>
-		<div class="debug" mv-app="payments" mv-bar="none" mv-storage="#payments">
-			<h2>Payment List</h2>
-			<ul mv-list="data">
+		<div class="debug" mv-app="config" mv-bar="none" mv-storage="#payTypes">
+			<style>
+				html {
+						font-size: [signup.fontScale]%;
+				}
+				input, select, button {
+						font-size: [5*signup.fontScale/6]%; /* consistent with chrome */
+				}
+				.radio-icon {
+						width: [32*signup.fontScale/100]px;
+				}
+			</style>
+			
+			<h2>PayType List</h2>
+			<ul mv-list="payTypes">
 				<li mv-list-item>
 					<span property="type"></span>, <img class="radio-icon" property="icon">
 				</li>
 			</ul>
+
+			<input id="texteditor" style="min-width: 30ch">
 		</div>
 		
-		<main mv-app="attendance" mv-storage="local">
-			<h2 property="title" mv-default="Attendance"></h2>
-			<div>Class date: <input type="date" property="dateChoice" mv-default="[date($startup)]" mv-storage="none"></div>
+		<main mv-app="signup" mv-storage="local">
+			<span style="float:right">Font size: <input property="fontScale" type="range" min="100" max="200" step="5" value="100"></span>
+			<meta property="showHistory" mv-value="false">
+			<h2 property="title" mv-default="Class Signup"></h2>
+			Standard price: $<span property="price" mv-editor-type="number" mv-default="20"></span>
+			<div><button mv-action="add(session), set(first(session).price, price)">Add Session</button></div>
 
-			<section class="classList">
-				<div>
+			<section class="sessionList">
 
-					<div>
-						<h3>New</h3>
-						<datalist id="names" mv-list mv-value="sort(unique(db.name))">
+				<div class="session" mv-list="session" mv-order="desc" mv-initial-items="0">
+					<div mv-list-item="session" class="hide-if-[$index>0 and !showHistory]">
+
+						<h3><span property="title" mv-default="Class"></span>
+							-
+							<span property="classDate" mv-default="[date($startup)]"  mv-editor-type="date"></span>
+						</h3>
+
+						<div style="grid-column: 1/-1" class="hide-onread-[price = signup.price]">Session price: $<span property="price" mv-editor-type="number"></span></div>
+
+						<!--New student entry-->
+						<datalist id="names" mv-list mv-value="sort(unique($all.student.name))">
 							<option mv-list-item></option>
 						</datalist>
-						<div property="newItem" style="display:none" mv-storage="none"><!--to store in db-->
-							<meta property="name" mv-value="newName">
-							<meta property="classDate" mv-value="dateChoice">
-							<meta property="payment">
+						<div style="display:none" property="empty" mv-storage="none">
+							<meta property="name">
+							<meta property="payType">
+							<meta property="price" mv-value="session.price">
+							<meta property="classCount">
+							<meta property="note">
 						</div>
-						<div><!--absorb grid cell--> </div>
-						<input class="name" property="newName" list="names" mv-storage="none">
-						<span class="payment" mv-list mv-if="newName" mv-value="payments.data">
-								<img mv-list-item mv-group class="radio-icon selected-true" src="[icon]"
-										 mv-action="set(newItem.payment, type), add(newItem,db), set(newName,'')">
-						</span>
-					</div>
-				</div>
-				<div>
-					<div>
-						<h3>Recent</h3>
-
-						<div class="debug">
-							<div mv-list="recentSet" mv-value="condense(filter(db, recent))"></div>
-							<div mv-list="recentList" mv-value="recentSet by recentSet.name"></div>
+						<div property="newItem" mv-storage="none">
+							<button mv-action="set(newItem,empty)">X</button>
+							<input class="name" property="name" list="names" mv-storage="none" placeholder="Student Name">
+							<meta style="display:none" property="payType">
+							<div style="display:none" property="myRecord" mv-value="first(studentTotal where studentTotal.name=name)">
+								<span property="cardsRemaining" mv-default="0"></span>
+							</div>
+							<meta style="display:none" property="showCard" mv-value="myTotal.cardsRemaining">
+							<span>$<input type="number" property="price" class="edit-number" mv-default="[session.price]"></span>
+							<input type="number" mv-editor-step="any" class="edit-number"
+										 property="classCount" placeholder="card">
+							<input property="note" placeholder="Note"></input>
+							<span class="payType hidden-if-[!name]" mv-list="payButtons" mv-storage="none" mv-value="config.payTypes">
+								<meta property="type">
+								<span mv-list-item mv-group>
+									<img class="radio-icon selected-true hide-if-[type='card' and cardsRemaining <= 0]" src="[icon]"
+											 mv-action="set(newItem.payType, type), add(newItem,student), set(newItem,empty)">
+									<span mv-if="type='card' and cardsRemaining > 0">([cardsRemaining])</span>
+								</span>
+							</span>
 						</div>
-						<div style="grid-column: 1 / -1">Most recent <input id="lookback" type="number" property="lookback" mv-default="15"> days&apos; attendees</div>
 						
-						<ul mv-list mv-value="recentList">
-							<li mv-list-item>
-								<div><!--absorb grid cell--> </div>
-								<span class="name" property="name" mv-value="$value"></span>
-								<span class="payment" mv-list mv-value="payments.data">
-									<img class="radio-icon" mv-list-item mv-group src="[icon]"
-											 set(newItem.name, name), set(newItem.payment,type), add(newItem,db)
-											 mv-action="add(group(name: name, payment: type, date: dateChoice), db)">
+						<h4 mv-if="count(student)>0">Registered</h4>
+						<ul mv-list="student" mv-initial-items="0">
+							<li mv-list-item mv-mode="edit">
+								<button class="delete" mv-action="delete(student)">X</button>
+								<span class="name" property="name" mv-editor="#texteditor"></span> 					
+								<meta  style="display:none" property="payType">
+								<span style="justify-self: end;"><span mv-if="payType != 'card'">
+										<span property="price" mv-editor-type="number"
+													 ></span></span></span>
+								<span style="justify-self: end;"><span mv-editor-step="any"
+																											 mv-editor-type="number"
+														mv-editor-style="min-width: 6ch; text-align: right"
+														property="classCount" mv-editor-placeholder="card"></span></span>
+								<span><span property="note" mv-editor="#texteditor"></span></span>
+								<span class="payType" mv-list="payButtons" mv-value="config.payTypes" mv-storage="none">
+									<span mv-list-item mv-group
+												class="hide-if-[type='card' and (classCount>0 or cardsRemaining <= 0)]">
+										<img 
+											class="radio-icon selected-[payType=type]"
+											src="[icon]"
+											mv-action="set(payType, type)">
+										<span mv-if="type='card' and cardsRemaining > 0">([cardsRemaining])</span>
+									</span>
 								</span>
-						</ul>
-					</div>
-				</div>
-				<meta mv-list="dateGroups" mv-value="db by db.classDate">
-				<div mv-list="byDate" mv-value="sort(dateGroups,'$value',order: 'desc')">
-					<div mv-list-item>
-						<h3>[classDate]</h3>
-						<ul mv-list="$items">
-							<li mv-list-item>
-								<button class="delete" mv-action="delete(db where db.key = key)">X</button>
-								<span class="name" property="name"></span> 					
-								<span class="payment" mv-list="payButtons" mv-value="payments.data">
-									<img mv-list-item mv-group class="radio-icon selected-[payment=type]"
-											 src="[icon]"
-											 mv-action="set(db.payment where db.key=key, type)">
-								</span>
-								<meta property="key">
-								<meta property="payment">
+								<div style="display:none" property="myRecord" mv-value="first(studentTotal where studentTotal.name=name)">
+									<span property="cardsRemaining" mv-default="0"></span>
+								</div>
 							</li>
 						</ul>
+
+						<h3 mv-if="$index=0">History
+							<button mv-action="set(showHistory, !showHistory)">
+								<span mv-if="!showHistory">Show</span>
+								<span mv-if="showHistory">Hide</span>
+							</button>
+						</h3>
 					</div>
 				</div>
 			</section>
 
-				
+			<div class="debug">
+				<div mv-list="studentTotal" mv-value="session.student by session.student.name">
+					<div mv-list-item mv-group>
+						<h4 property="name" mv-value="$value"></h4>
+						<ul mv-list="$items">
+							<li mv-list-item>
+								<span property="payType"></span> / <span property="classCount"></span>
+							</li>
+						</ul> 
+						<div>Card classes: <span property="classCount" mv-value="count($items where payType = card)"></span></div>
+						<div>Card purchases: <span property="cardCount" mv-value="sum($items.classCount)"></span></div>
+						<div>Card classes remaining: <span property="cardsRemaining" mv-value="cardCount-classCount"></span></div>
+					</div>
+				</div>
+			</div>
 			
-			<div class="debug">
-				<h2>Database</h2>
-				<ul mv-list="db" mv-initial-items="0">
-					<li mv-list-item>
-						<span property="name"></span>,
-						<span property="classDate"></span>,
-						<span property="payment"></span>,
-						<span property="recent" mv-value="if($startup - classDate < (1+lookback)* days(),1,0)"></span>,
-						<span property="key" mv-value="name & classDate"></span>
-					</li>
-				</ul>
-			</div>
-
-			<div class="debug">
-			</div>
 		</main>
+		<footer>
+			<a target="_blank" href="https://icons8.com/icon/Aq3yCVxsN8mv/gift-voucher">gift voucher</a> icon by <a target="_blank" href="https://icons8.com">Icons8</a>
+<a target="_blank" href="https://icons8.com/icon/pgqW5sZ9gfnx/membership">Membership</a> icon by <a target="_blank" href="https://icons8.com">Icons8</a>
+		</footer>
+
 	</body>
 </html>
