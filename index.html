@@ -21,8 +21,8 @@
 					opacity: 30%;
 					margin-top: auto;
 			}
-			[property="price"][property="price"] input {
-					min-width: 8ch;
+			[property="price"][property="price"][property="price"][property="price"] input {
+					min-width: 6ch;
 			}
 			[mv-editor-type="number"] {
 					text-align: right;
@@ -47,8 +47,8 @@
 					justify-items: start;
 					grid-column: 1 / -1;
 			}
-			.edit-number, .edit-number input {
-					min-width: 6ch;
+			input[type="number"][mv-mode="edit"] {
+					min-width: 5ch;
 					text-align: right;
 					text-align: end;
 			}
@@ -65,6 +65,20 @@
 					grid-template-columns: subgrid;
 					align-items: center;
 					justify-items: start;
+			}
+			.total {
+					margin-top: 2ex;
+					padding-left: 2ex;
+					display: grid;
+					grid-column: 1 / -1;
+					grid-template-columns: subgrid;
+					align-items: center;
+					justify-items: start;
+			}
+			.total .value {
+					border-top: 3px solid black;
+					padding-right: 2ch;
+					justify-self: end;
 			}
 			input[type='number'] {
 					max-width: 5ch;
@@ -119,6 +133,8 @@
 			"icon": "bank-check.png"},
 			{"type": "venmo",
 			"icon": "venmo.png"},
+			{"type": "zelle",
+			"icon": "zelle.png"},
 			{"type": "card",
 			"icon": "membership.png"}
 			]
@@ -184,8 +200,8 @@
 								<span property="cardsRemaining" mv-default="0"></span>
 							</div>
 							<meta style="display:none" property="showCard" mv-value="myTotal.cardsRemaining">
-							<span>$<input type="number" property="price" class="edit-number" mv-default="[session.price]"></span>
-							<input type="number" mv-editor-step="any" class="edit-number"
+							<span>$<input type="number" property="price" mv-default="[session.price]"></span>
+							<input type="number" mv-editor-step="any" 
 										 property="classCount" placeholder="card">
 							<input property="note" placeholder="Note"></input>
 							<span class="payType hidden-if-[!name]" mv-list="payButtons" mv-storage="none" mv-value="config.payTypes">
@@ -227,6 +243,12 @@
 								</div>
 							</li>
 						</ul>
+
+						<div class="total" mv-if="sum(price)>0">
+							<span></span>
+							<span>Total:</span>
+							<span class="value">[sum(student.price)]</span>
+						</div>
 
 						<h3 mv-if="$index=0">History
 							<button mv-action="set(showHistory, !showHistory)">
