@@ -120,6 +120,9 @@
 			img[src="bank-check.png"] {
 					transform: translate(0, -5px);
 			}
+			[mv-app="exporter"] p, [mv-app="exporter"] div {
+					padding: 2ch;
+			}
 			[mv-app="exporter"] {
 					position: fixed;
 					top: 50%;
@@ -323,9 +326,9 @@
 
 		<section mv-app="exporter" mv-if="signup.showExport">
 			<div class="title-bar"><h3>Export Table</h3></div>
-
 			<button class="close-button" mv-action="set(signup.showExport, false)">X</button>
 			
+			<p>Select and copy table rows want to export; you can paste them into any spreadsheet.</p>
 			<div mv-list="session" mv-value="signup.session">
 				<table class="session-header">
 					<thead>
