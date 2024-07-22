@@ -40,7 +40,7 @@
 			[property="newItem"] {
 					padding-left: 2ex;
 			}
-			[mv-list="session"] > [mv-list-item] , [property="newItem"] {
+			[mv-list="session"] > [mv-list-item] , [property="newItem"], .session-header {
 					display: grid;
 					grid-template-columns: subgrid;
 					align-items: center;
@@ -55,7 +55,7 @@
 			[mv-list="session"] > [mv-list-item] > h3 {
 					grid-column: 1 / -1;
 			}
-			[mv-list="student"] {
+			[mv-list="student"] , .session-header > thead, .session-header > thead > tr {
 					display: contents;
 			}
 			[mv-list="student"] >  [mv-list-item] {
@@ -120,6 +120,41 @@
 			img[src="bank-check.png"] {
 					transform: translate(0, -5px);
 			}
+			[mv-app="exporter"] {
+					position: fixed;
+					top: 50%;
+					left: 50%;
+					width: 75vw; /* 75% of the viewport width */
+					height: 75vh; /* 75% of the viewport height */
+					transform: translate(-50%, -50%);
+					overflow: auto; /* Enable scrollbar for excess content */
+					background-color: white; /* Optional: set a background color */
+					box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1); /* Optional: add a shadow for better visibility */
+					border: 1px solid #ccc; /* Optional: add a border */
+			}
+			.title-bar {
+					background-color: #888;
+					color: white;
+					padding: 10px;
+					height: 40px; /* Fixed height for the title bar */
+					box-sizing: border-box;
+					display: flex;
+					justify-content: space-between;
+					align-items: center;
+			}
+			.close-button {
+					position: absolute;
+      top: 0;
+      right: 0;
+      width: 30px;
+      height: 30px;
+      background: grey;
+      color: #fff;
+      border: none;
+      font-size: 16px;
+      text-align: center;
+      line-height: 30px;
+    }
 		</style>
 	</head>
 	<body>
@@ -162,12 +197,21 @@
 			<input id="texteditor" style="min-width: 30ch">
 		</div>
 		
-		<main mv-app="signup" mv-storage="local">
+		<main mv-app="signup" mv-storage="local" class="hide-if-[exporter.exporting]">
+			<div class="mv-bar mv-ui">
+        <button mv-action="set(showExport,!showExport)">Export</button>
+			</div>
+
 			<span style="float:right">Font size: <input property="fontScale" type="range" min="100" max="200" step="5" value="100"></span>
 			<meta property="showHistory" mv-value="false">
+			<meta property="showExport" mv-value="false">
 			<h2 property="title" mv-default="Class Signup"></h2>
 			Standard price: $<span property="price" mv-editor-type="number" mv-default="20"></span>
 			<div><button mv-action="add(session), set(first(session).price, price)">Add Session</button></div>
+
+			<datalist id="names" mv-list mv-value="sort(unique(session.student.name))">
+				<option mv-list-item></option>
+			</datalist>
 
 			<section class="sessionList">
 
@@ -182,9 +226,6 @@
 						<div style="grid-column: 1/-1" class="hide-onread-[price = signup.price]">Session price: $<span property="price" mv-editor-type="number"></span></div>
 
 						<!--New student entry-->
-						<datalist id="names" mv-list mv-value="sort(unique($all.student.name))">
-							<option mv-list-item></option>
-						</datalist>
 						<div style="display:none" property="empty" mv-storage="none">
 							<meta property="name">
 							<meta property="payType">
@@ -219,15 +260,16 @@
 							<li mv-list-item mv-mode="edit">
 								<button class="delete" mv-action="delete(student)">X</button>
 								<span class="name" property="name" mv-editor="#texteditor"></span> 					
-								<meta  style="display:none" property="payType">
-								<span style="justify-self: end;"><span mv-if="payType != 'card'">
+								<span style="justify-self: end;"><span class="hide-if-[payType='card']">
 										<span property="price" mv-editor-type="number"
 													 ></span></span></span>
 								<span style="justify-self: end;"><span mv-editor-step="any"
 																											 mv-editor-type="number"
-														mv-editor-style="min-width: 6ch; text-align: right"
-														property="classCount" mv-editor-placeholder="card"></span></span>
+																											 mv-editor-style="min-width: 6ch; text-align: right"
+																											 class="hide-if-[payType='card']"
+																											 property="classCount" mv-editor-placeholder="card"></span></span>
 								<span><span property="note" mv-editor="#texteditor"></span></span>
+								<meta style="display:none" property="payType">
 								<span class="payType" mv-list="payButtons" mv-value="config.payTypes" mv-storage="none">
 									<span mv-list-item mv-group
 												class="hide-if-[type='card' and (classCount>0 or cardsRemaining <= 0)]">
@@ -260,6 +302,7 @@
 				</div>
 			</section>
 
+			
 			<div class="debug">
 				<div mv-list="studentTotal" mv-value="session.student by session.student.name">
 					<div mv-list-item mv-group>
@@ -277,6 +320,38 @@
 			</div>
 			
 		</main>
+
+		<section mv-app="exporter" mv-if="signup.showExport">
+			<div class="title-bar"><h3>Export Table</h3></div>
+
+			<button class="close-button" mv-action="set(signup.showExport, false)">X</button>
+			
+			<div mv-list="session" mv-value="signup.session">
+				<table class="session-header">
+					<thead>
+						<th>Date</th>
+						<th>Name</th>
+						<th>Price</th>
+						<th>Classes</th>
+						<th>Note</th>
+						<th>Pay type</th>
+					</thead>
+				</table>
+				<table mv-list-item>
+					<tbody mv-list="student">
+						<tr mv-list-item>
+							<td>[classDate]</td>
+							<td property="name"></td>
+							<td property="price"></td>
+							<td property="classCount"></td>
+							<td property="note"></td>
+							<td property="payType"></td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</section>
+
 		<footer>
 			<a target="_blank" href="https://icons8.com/icon/Aq3yCVxsN8mv/gift-voucher">gift voucher</a> icon and <a target="_blank" href="https://icons8.com/icon/pgqW5sZ9gfnx/membership">Membership</a> by <a target="_blank" href="https://icons8.com">Icons8</a>
 		</footer>
