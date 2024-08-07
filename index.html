@@ -21,6 +21,11 @@
 					opacity: 30%;
 					margin-top: auto;
 			}
+			[property="label"] {
+					width: 30ex;
+					text-align: center;
+			}
+
 			[property="price"][property="price"][property="price"][property="price"] input {
 					min-width: 6ch;
 			}
@@ -31,7 +36,7 @@
 					margin-left: 2ex;
 					display: grid;
 					column-gap: 0px;
-					grid-template-columns: 3ch max-content 8ch 8ch max-content 30ch;
+					grid-template-columns: 3ch max-content 10ch 10ch max-content 30ch;
 					justify-content: space-between;
 					justify-items: start;
 					align-items: center;
@@ -66,6 +71,12 @@
 					align-items: center;
 					justify-items: start;
 			}
+			details {
+					padding-bottom: 2ex;
+			}
+			[mv-list="cardButtons"] {
+					grid-column: 2/-1;
+			}
 			.total {
 					margin-top: 2ex;
 					padding-left: 2ex;
@@ -81,7 +92,7 @@
 					justify-self: end;
 			}
 			input[type='number'] {
-					max-width: 5ch;
+					max-width:6ch;
 			}
 			.radio-icon {
 					opacity: 33%;
@@ -209,7 +220,34 @@
 			<meta property="showHistory" mv-value="false">
 			<meta property="showExport" mv-value="false">
 			<h2 property="title" mv-default="Class Signup"></h2>
-			Standard price: $<span property="price" mv-editor-type="number" mv-default="20"></span>
+
+			<details>
+				<summary>Configure Class</summary>
+
+				<div>
+					Standard price: $<span property="price" mv-editor-type="number" mv-default="20"></span>
+				</div>
+
+				<table>
+					<thead>
+						<th></th>
+						<th>Card Type</th>
+						<th>Classes</th>
+						<th>Price</th>
+					</thead>
+					<tbody mv-list="card" mv-initial-items="0" mv-mode="edit"
+								 mv-item-bar="none">
+						<tr mv-list-item>
+							<td><button mv-action="delete(card)">X</button></td>
+							<td property="label" mv-default="[count] class card"></td>
+							<td property="count" mv-editor-type="number"></td>
+							<td property="price" mv-editor-type="number"></td>
+						</tr>
+					</tbody>
+				</table>
+				<button mv-action="add(card)">Add card</button>
+			</details>
+
 			<div><button mv-action="add(session), set(first(session).price, price)">Add Session</button></div>
 
 			<datalist id="names" mv-list mv-value="sort(unique(session.student.name))">
@@ -245,7 +283,7 @@
 							</div>
 							<meta style="display:none" property="showCard" mv-value="myTotal.cardsRemaining">
 							<span>$<input type="number" property="price" mv-default="[session.price]"></span>
-							<input type="number" mv-editor-step="any" 
+							<input type="number" mv-editor-step="any" style=
 										 property="classCount" placeholder="card">
 							<input property="note" placeholder="Note"></input>
 							<span class="payType hidden-if-[!name]" mv-list="payButtons" mv-storage="none" mv-value="config.payTypes">
@@ -255,6 +293,14 @@
 											 mv-action="set(newItem.payType, type), add(newItem,student), set(newItem,empty)">
 									<span mv-if="type='card' and cardsRemaining > 0">([cardsRemaining])</span>
 								</span>
+							</span>
+						</div>
+						<div mv-list="cardButtons" mv-value="card">
+							<span mv-list-item>
+								<meta property="label"
+											><meta property="price"
+														 ><meta property="count">
+								<button mv-action="set(newItem.price,price), set(newItem.classCount,count), set(newItem.note, label)">[label]</button>
 							</span>
 						</div>
 						
